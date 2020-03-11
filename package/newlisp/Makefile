@@ -10,24 +10,25 @@ include $(TOPDIR)/rules.mk
 # where the source code is downloaded
 #
 PKG_NAME:=newlisp
-PKG_VERSION:=10.4.4
+PKG_VERSION:=10.7.5
 PKG_RELEASE:=1
 PKG_FLAGS:=essential
 
 #PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tgz
 
-#PKG_SOURCE_URL:=http://www.newlisp.org/downloads/development/
-PKG_SOURCE_URL:=http://www.ucrobotics.com/tmp/
+PKG_SOURCE_URL:=http://www.newlisp.org/downloads/
 
 #
 # md5 can be computed using the md5sum utility available on linux
 #
 #PKG_MD5SUM:=6a5a901512c293d0fa7756f80f5661cc # original
 # 10.2.18
-PKG_MD5SUM:=8473e9e35e81994e6e7b87efa1d7f5db
+#PKG_MD5SUM:=8473e9e35e81994e6e7b87efa1d7f5db
 # 10.3.0 
 #PKG_MD5SUM:=e97b1000b3e4ca76342381d8f0dfd960
+#10.7.5
+PKG_MD5SUM:=e3fa56cf45af8853ff8a3182b79e1b61
 PKG_CAT:=zcat
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -40,6 +41,7 @@ define Package/newlisp
   TITLE:=newLisp - the best Lisp ever.
   URL:=http://www.newlisp.org
   MENU:=1
+  DEPENDS:=+libreadline
 endef
 
 define Package/newlisp/description
@@ -54,12 +56,14 @@ endef
 
 define Build/Configure
 	rm -f $(PKG_BUILD_DIR)/.configured*
+	cp -f ./files/makefile_build $(PKG_BUILD_DIR)/makefile_build 
 	grep 'CONFIG_NEWLISP_' $(TOPDIR)/.config | sed -e "s,\\(# \)\\?CONFIG_NEWLISP_\\(.*\\),\\1\\2,g" > $(PKG_BUILD_DIR)/.config
 	yes '' | $(MAKE) -C $(PKG_BUILD_DIR) \
 		CC="$(TARGET_CC)" \
 		CROSS_COMPILE="$(TARGET_CROSS)" \
 		KBUILD_HAVE_NLS=no \
 		ARCH="$(ARCH)"
+   
 endef
 
 ifdef CONFIG_GCC_VERSION_LLVM
@@ -76,7 +80,9 @@ define Build/Compile
 		SKIP_STRIP=n \
 		all
 	#rm -rf $(PKG_INSTALL_DIR)
+
 	$(FIND) $(PKG_BUILD_DIR) -lname "*newlisp" -exec rm \{\} \;
+
 	$(MAKE) -C $(PKG_BUILD_DIR) \
 		CC="$(TARGET_CC)" \
 		CROSS_COMPILE="$(TARGET_CROSS)" \
